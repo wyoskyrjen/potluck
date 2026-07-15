@@ -1,4 +1,5 @@
 import { Button, Card, Col, Row } from 'react-bootstrap'
+import hiThereBg from '../../../assets/Hi There.png'
 
 // Dummy potluck sign-up data. In a real client-side app this could come from
 // component state, localStorage, or a public read-only API — never a server we own.
@@ -11,7 +12,15 @@ const DISHES = [
 
 function Home() {
   return (
-    <>
+    <div
+      style={{
+        backgroundImage: `url(${hiThereBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh',
+      }}
+    >
       <Row className="mb-4">
         <Col>
           <h1>Who's bringing what?</h1>
@@ -40,7 +49,7 @@ function Home() {
           </Col>
         ))}
       </Row>
-    </>
+    </div>
   )
 }
 
