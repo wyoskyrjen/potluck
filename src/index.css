@@ -17,10 +17,17 @@ main {
   min-height: 70vh;
 }
 
+/* Pinned to the top of the viewport on every route. Layout renders this navbar
+   above the <Outlet />, so the rule covers Home, About, and the 404 alike.
+   z-index sits above Bootstrap's .sticky-top (1020) so the embedded map iframe
+   and any Bootstrap overlays can't paint over the header while scrolling. */
 .navbar-potluck {
   background-color: #774e80;
   padding-top: 20px;
   padding-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
 }
 
 .navbar-potluck .navbar-brand {
@@ -32,12 +39,6 @@ main {
 }
 
 /* ---------- Home page ---------- */
-
-/* Cancel the Layout container's padding/gutters so the bands run edge to edge,
-   the way they do in the design. */
-.potluck-home {
-  margin: -1.5rem -0.75rem;
-}
 
 .home-band {
   border-top: 2px solid #000000;
@@ -68,6 +69,18 @@ main {
   color: #000000;
 }
 
+.home-map {
+  border: 2px solid #000000;
+  margin: 12px 0;
+}
+
+.home-map iframe {
+  border: 0;
+  display: block;
+  height: 240px;
+  width: 100%;
+}
+
 .home-host-photo {
   border-radius: 0;
   object-fit: cover;
@@ -76,7 +89,7 @@ main {
 
 .home-actions {
   display: flex;
-  gap: 16px;
+  gap: 48px;
   justify-content: center;
 }
 
@@ -101,6 +114,104 @@ main {
 /* Keyboard focus needs to be visible against the yellow fill. */
 .btn-potluck:focus-visible {
   box-shadow: 0 0 0 3px #f02a2f;
+  outline: none;
+}
+
+/* ---------- Sign Up page ---------- */
+
+.signup-page {
+  padding-top: 24px;
+}
+
+.signup-list {
+  background-color: #e6e6e6;
+  color: #000000;
+  min-height: 200px;
+  padding: 16px;
+}
+
+.signup-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.signup-entry + .signup-entry {
+  margin-top: 16px;
+}
+
+.signup-actions {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.signup-input {
+  background-color: #e6e6e6;
+  border: 1px solid #000000;
+  border-radius: 0;
+}
+
+/* Bootstrap resets the background on focus; keep the gray fill from the design. */
+.signup-input:focus {
+  background-color: #e6e6e6;
+  border-color: #774e80;
+  box-shadow: 0 0 0 0.2rem rgba(119, 78, 128, 0.35);
+}
+
+.signup-charcount {
+  color: #000000;
+  font-size: 12px;
+  text-align: right;
+}
+
+/* Paired Cancel/Done buttons sit inside a form, so they run smaller than the
+   full-width Sign Up! and Cancel buttons on the list screen. */
+.signup-form-actions .btn-cancel,
+.signup-form-actions .btn-done {
+  font-size: 20px;
+  min-width: 120px;
+}
+
+.btn-done {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  color: #000000;
+  font-weight: bold;
+}
+
+.btn-done:hover,
+.btn-done:focus {
+  background-color: #dddddd;
+  border-color: #000000;
+  color: #000000;
+}
+
+.btn-done:focus-visible {
+  box-shadow: 0 0 0 3px #774e80;
+  outline: none;
+}
+
+.btn-cancel {
+  background-color: #f02a2f;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  color: #000000;
+  font-size: 28px;
+  font-weight: bold;
+  min-width: 220px;
+}
+
+.btn-cancel:hover,
+.btn-cancel:focus {
+  background-color: #d4181d;
+  border-color: #000000;
+  color: #000000;
+}
+
+.btn-cancel:focus-visible {
+  box-shadow: 0 0 0 3px #774e80;
   outline: none;
 }
 

@@ -2,6 +2,9 @@ import { HashRouter, Route, Routes } from 'react-router'
 
 import Layout from './Layout'
 import Home from '../content/Home'
+import SignUp from '../content/SignUp'
+import SignUpName from '../content/SignUpName'
+import SignUpParticipant from '../content/SignUpParticipant'
 import About from '../content/About'
 import NoMatch from '../content/NoMatch'
 
@@ -14,6 +17,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="signup" element={<SignUp />} />
+          <Route path="signup/who" element={<SignUpName />} />
+          <Route path="signup/participant/:name" element={<SignUpParticipant />} />
           <Route path="about" element={<About />} />
           <Route path="*" element={<NoMatch />} />
         </Route>

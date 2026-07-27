@@ -12,10 +12,10 @@ function Layout() {
         </Container>
       </Navbar>
 
+      {/* No Container here on purpose: pages own their own width, so Home's
+          colored bands can run edge to edge across the viewport. */}
       <main>
-        <Container className="py-4">
-          <Outlet />
-        </Container>
+        <Outlet />
       </main>
 
       <footer className="bg-light border-top py-3">

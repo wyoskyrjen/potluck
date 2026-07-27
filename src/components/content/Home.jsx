@@ -1,24 +1,35 @@
 import { useEffect, useState } from 'react'
 import { Button, Card, Col, Container, Row } from 'react-bootstrap'
 import { Link } from 'react-router'
-import hostPhoto from '../../../assets/Hi There.png'
-
-// Dummy potluck sign-up data. In a real client-side app this could come from
-// component state, localStorage, or a public read-only API — never a server we own.
-const DISHES = [
-  { id: 1, dish: 'Garden Salad', who: 'Alex', category: 'Side' },
-  { id: 2, dish: 'BBQ Pulled Jackfruit', who: 'Sam', category: 'Main' },
-  { id: 3, dish: 'Cheddar Biscuits', who: 'Jordan', category: 'Bread' },
-  { id: 4, dish: 'Apple Pie', who: 'Casey', category: 'Dessert' },
-]
+import hostPhoto from '../../../assets/exampleHostImage.jpg'
 
 // When the potluck starts. Everything on this page (including the countdown) is
 // derived from this one constant, so moving the party means editing one line.
 const EVENT_START = new Date('2026-08-15T17:00:00')
 
-const EVENT_WHEN = 'Saturday, August 15, 2026 · 5:00 – 9:00 PM'
+const EVENT_WHEN = 'Saturday, August 15, 2026 5:00 – 9:00 PM'
 const EVENT_WHERE = '1210 W Dayton St, Madison, WI 53706'
 const EVENT_MAP = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(EVENT_WHERE)}`
+
+// Approximate coordinates for EVENT_WHERE, used to center the embedded map. If the
+// venue moves, right-click the spot in any map app, copy the lat/long, and edit here.
+const EVENT_COORDS = { lat: 43.0717, lon: -89.4065 }
+
+// OpenStreetMap's embed endpoint takes a bounding box rather than a zoom level; a
+// small box around the venue lands on a street-level view. It needs no API key and
+// no third-party script, so the page stays purely static.
+const MAP_SPAN = { lat: 0.002, lon: 0.004 }
+const MAP_BBOX = [
+  EVENT_COORDS.lon - MAP_SPAN.lon,
+  EVENT_COORDS.lat - MAP_SPAN.lat,
+  EVENT_COORDS.lon + MAP_SPAN.lon,
+  EVENT_COORDS.lat + MAP_SPAN.lat,
+]
+  .map((n) => n.toFixed(4))
+  .join(',')
+const MAP_EMBED =
+  `https://www.openstreetmap.org/export/embed.html?bbox=${MAP_BBOX}` +
+  `&layer=mapnik&marker=${EVENT_COORDS.lat},${EVENT_COORDS.lon}`
 
 // Whole days + leftover whole hours until the event, or null once it has started.
 function getRemaining() {
@@ -42,12 +53,19 @@ function Home() {
   return (
     <div className="potluck-home">
       <section className="home-band home-band-green">
-        <Container>
+        <Container fluid>
           <h2 className="home-heading">Event Info</h2>
           <Card className="home-card text-center">
             <Card.Body>
               <p className="mb-1"><strong>When:</strong> {EVENT_WHEN}</p>
               <p className="mb-1"><strong>Where:</strong> {EVENT_WHERE}</p>
+              <div className="home-map">
+                <iframe
+                  title={`Map showing ${EVENT_WHERE}`}
+                  src={MAP_EMBED}
+                  loading="lazy"
+                />
+              </div>
               <p className="mb-0">
                 <a href={EVENT_MAP} target="_blank" rel="noreferrer">Open in Maps</a>
                 {' · '}
@@ -59,7 +77,7 @@ function Home() {
       </section>
 
       <section className="home-band home-band-white">
-        <Container>
+        <Container fluid>
           <div className="home-actions">
             <Button as={Link} to="/signup" className="btn-potluck" size="lg">
               Sign Up!
@@ -72,7 +90,7 @@ function Home() {
       </section>
 
       <section className="home-band home-band-green">
-        <Container>
+        <Container fluid>
           <h2 className="home-heading">About the Host</h2>
           <Row className="g-3">
             <Col xs={5}>
@@ -103,7 +121,7 @@ function Home() {
       </section>
 
       <section className="home-countdown">
-        <Container className="text-center">
+        <Container fluid className="text-center">
           {remaining
             ? `Countdown: ${remaining.days} days, ${remaining.hours} hours`
             : 'The potluck is happening right now — come on over!'}
