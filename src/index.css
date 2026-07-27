@@ -1,7 +1,113 @@
+/*
+Reference Colors:
+  darkest green: 99AA97
+  medium green: BBC6B8
+  white: FFFFFF
+  black: 000000
+  contrast red: F02A2F
+  yellow: FFD983
+  purple: 774E80
+*/
+
 body {
   margin: 0;
 }
 
 main {
   min-height: 70vh;
+}
+
+.navbar-potluck {
+  background-color: #774e80;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.navbar-potluck .navbar-brand {
+  font-size: 40px;
+  color: #ffffff;
+  font-family: "Lucida Handwriting";
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- Home page ---------- */
+
+/* Cancel the Layout container's padding/gutters so the bands run edge to edge,
+   the way they do in the design. */
+.potluck-home {
+  margin: -1.5rem -0.75rem;
+}
+
+.home-band {
+  border-top: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  padding: 16px 0;
+}
+
+.home-band-green {
+  background-color: #bbc6b8;
+}
+
+.home-band-white {
+  background-color: #ffffff;
+}
+
+.home-heading {
+  color: #000000;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.home-card {
+  background-color: #ffffff;
+  border: none;
+  border-radius: 0;
+  color: #000000;
+}
+
+.home-host-photo {
+  border-radius: 0;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+}
+
+.home-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn-potluck {
+  background-color: #ffd983;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  color: #000000;
+  flex: 1 1 0;
+  font-size: 28px;
+  font-weight: bold;
+  max-width: 220px;
+}
+
+.btn-potluck:hover,
+.btn-potluck:focus {
+  background-color: #f5c95c;
+  border-color: #000000;
+  color: #000000;
+}
+
+/* Keyboard focus needs to be visible against the yellow fill. */
+.btn-potluck:focus-visible {
+  box-shadow: 0 0 0 3px #f02a2f;
+  outline: none;
+}
+
+.home-countdown {
+  background-color: #774e80;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: bold;
+  padding: 12px 0;
 }

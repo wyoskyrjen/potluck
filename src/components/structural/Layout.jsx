@@ -6,16 +6,9 @@ import { Link, Outlet } from 'react-router'
 function Layout() {
   return (
     <>
-      <Navbar bg="dark" variant="dark" expand="md" sticky="top">
+      <Navbar variant="light" sticky="top" className="navbar-potluck">
         <Container>
-          <Navbar.Brand as={Link} to="/">🥘 Potluck</Navbar.Brand>
-          <Navbar.Toggle aria-controls="potluck-nav" />
-          <Navbar.Collapse id="potluck-nav">
-            <Nav className="ms-auto">
-              <Nav.Link as={Link} to="/">Home</Nav.Link>
-              <Nav.Link as={Link} to="/about">About</Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
+          <Navbar.Brand as={Link} to="/">Jenna's Summer 2026 Potluck</Navbar.Brand>
         </Container>
       </Navbar>
 
