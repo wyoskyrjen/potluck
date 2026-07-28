@@ -1,0 +1,7 @@
+AI code generation estimation as of 7/28: 90%
+
+I designed the website and fed that into AI to generate the code. Creating a high-fidelity prototype out of my original low-fidelity version
+was essential to have this process go well (tried updating design along the way early on, that was rough). 
+
+At this point I read through things to make sure I understand the overall design, but I'll need to go back through and fix some usability/
+design issues I caught while doing my run-through for the mid-project check-in.
