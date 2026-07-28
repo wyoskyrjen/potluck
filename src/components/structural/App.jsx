@@ -5,6 +5,8 @@ import Home from '../content/Home'
 import SignUp from '../content/SignUp'
 import SignUpName from '../content/SignUpName'
 import SignUpParticipant from '../content/SignUpParticipant'
+import Menu from '../content/Menu'
+import MenuItem from '../content/MenuItem'
 import About from '../content/About'
 import NoMatch from '../content/NoMatch'
 
@@ -20,6 +22,10 @@ function App() {
           <Route path="signup" element={<SignUp />} />
           <Route path="signup/who" element={<SignUpName />} />
           <Route path="signup/participant/:name" element={<SignUpParticipant />} />
+          <Route path="menu" element={<Menu />} />
+          {/* Same form either way: no id means a new dish, an id means edit it. */}
+          <Route path="menu/item/new" element={<MenuItem />} />
+          <Route path="menu/item/:id" element={<MenuItem />} />
           <Route path="about" element={<About />} />
           <Route path="*" element={<NoMatch />} />
         </Route>
