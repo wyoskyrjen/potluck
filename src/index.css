@@ -23,6 +23,7 @@ main {
    and any Bootstrap overlays can't paint over the header while scrolling. */
 .navbar-potluck {
   background-color: #774e80;
+  border-bottom: 2px solid #000000;
   padding-top: 20px;
   padding-bottom: 20px;
   position: sticky;
@@ -30,12 +31,61 @@ main {
   z-index: 1030;
 }
 
+/* Bootstrap ships .navbar-brand with white-space: nowrap, which pushed this long
+   title past the edge of a phone viewport instead of wrapping. Overriding it lets
+   the title break across lines; clamp() then trades font size for height so narrow
+   screens get a shorter wrap rather than three lines of 40px handwriting. The 40px
+   ceiling is reached around a 570px viewport, so desktop is unchanged. */
 .navbar-potluck .navbar-brand {
-  font-size: 40px;
+  font-size: clamp(24px, 7vw, 40px);
   color: #ffffff;
   font-family: "Lucida Handwriting";
   margin-left: auto;
   margin-right: auto;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+/* Watermelon in the bottom-left corner, straddling the header's bottom border so it
+   spills slightly into the page below. .navbar-potluck is position: sticky, which is
+   already a positioned element, so this anchors to the navbar without needing a
+   position: relative added to it.
+
+   watermelon.png is a 666x374 canvas holding a 111x83 melon at offset (288,145) —
+   roughly 78% of the file is empty transparent space. Sizing an <img> would therefore
+   render a tiny melon inside a huge invisible hit-target, so this crops to the melon
+   with background-size/-position instead, leaving the source file untouched. Every
+   number below is the natural pixel value times --melon-scale, so changing the melon's
+   size means editing that one number. Re-exporting the PNG at a different canvas size
+   or offset means re-measuring the four constants. */
+.navbar-watermelon {
+  --melon-scale: 1.108; /* 92px tall on screen / 83px natural */
+  position: absolute;
+  left: 0;
+  bottom: -16px;
+  width: calc(111px * var(--melon-scale));
+  height: calc(83px * var(--melon-scale));
+  background-image: url('../assets/watermelon.png');
+  background-repeat: no-repeat;
+  background-size: calc(666px * var(--melon-scale)) calc(374px * var(--melon-scale));
+  background-position: calc(-288px * var(--melon-scale)) calc(-145px * var(--melon-scale));
+  pointer-events: none;
+}
+
+/* The 20px vertical padding is generous once the title occupies two lines, and this
+   navbar is sticky — trim it back so the header doesn't eat the small-screen viewport. */
+@media (max-width: 575.98px) {
+  .navbar-potluck {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  /* Smaller melon on phones so it stays clear of the wrapped title. */
+  .navbar-watermelon {
+    --melon-scale: 0.85;
+    bottom: -12px;
+  }
 }
 
 /* ---------- Home page ---------- */

@@ -7,6 +7,11 @@ function Layout() {
   return (
     <>
       <Navbar variant="light" sticky="top" className="navbar-potluck">
+        {/* Decorative watermelon tucked into the bottom-left corner. It lives outside
+            the Container so it can sit flush with the viewport edge rather than the
+            Container's centered gutter, and it's a CSS background (not an <img>) so
+            screen readers skip it. */}
+        <span className="navbar-watermelon" />
         <Container>
           <Navbar.Brand as={Link} to="/">Jenna's Summer 2026 Potluck</Navbar.Brand>
         </Container>

@@ -31,20 +31,25 @@ const MAP_EMBED =
   `https://www.openstreetmap.org/export/embed.html?bbox=${MAP_BBOX}` +
   `&layer=mapnik&marker=${EVENT_COORDS.lat},${EVENT_COORDS.lon}`
 
-// Whole days + leftover whole hours until the event, or null once it has started.
+// Whole days + leftover hours + leftover minutes until the event, or null once it
+// has started. Minutes matter: without them the line floors to a bare "0 hours" for
+// the whole hour before the party, which reads as a broken countdown.
 function getRemaining() {
   const ms = EVENT_START.getTime() - Date.now()
   if (ms <= 0) return null
   return {
     days: Math.floor(ms / 86400000),
     hours: Math.floor((ms % 86400000) / 3600000),
+    minutes: Math.floor((ms % 3600000) / 60000),
   }
 }
+
+const plural = (n, unit) => `${n} ${unit}${n === 1 ? '' : 's'}`
 
 function Home() {
   const [remaining, setRemaining] = useState(getRemaining)
 
-  // Hours are the smallest unit shown, so a once-a-minute tick is plenty.
+  // Minutes are the smallest unit shown, so a once-a-minute tick is plenty.
   useEffect(() => {
     const timer = setInterval(() => setRemaining(getRemaining()), 60000)
     return () => clearInterval(timer)
@@ -123,7 +128,9 @@ function Home() {
       <section className="home-countdown">
         <Container fluid className="text-center">
           {remaining
-            ? `Countdown: ${remaining.days} days, ${remaining.hours} hours`
+            ? `Countdown: ${plural(remaining.days, 'day')}, ` +
+              `${plural(remaining.hours, 'hour')}, ` +
+              `${plural(remaining.minutes, 'minute')}`
             : 'The potluck is happening right now — come on over!'}
         </Container>
       </section>
