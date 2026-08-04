@@ -78,19 +78,19 @@ main {
 @media (max-width: 575.98px) {
   .navbar-potluck {
     padding-top: 12px;
-    padding-bottom: 12px;
-    /* Reserve a lane for the melon. Absolute offsets resolve against the navbar's
-       padding box, so left: 0 keeps the melon flush with the viewport edge while
-       this padding pushes the centered title clear of it. Shrinking the melon alone
-       would not fix the overlap: the title is centered and nearly full-width at this
-       size, so it runs under anything in the left corner. */
-    padding-left: 88px;
+    /* Separate the melon from the title vertically rather than horizontally: this
+       padding opens a strip below the text for the melon to sit in, so the title
+       stays centered across the full width. Reserving space on the left instead
+       pushed the title off-center, and mirroring it on the right squeezed the text
+       into three lines. Keep this >= the melon's height above the border (51.5px
+       tall at scale 0.62, less the 16px that hangs below = 35.5px) or they collide. */
+    padding-bottom: 44px;
   }
 
-  /* Smaller melon on phones — at 0.85 it stood taller than the header itself. */
+  /* Smaller melon on phones — at 0.85 it stood taller than the whole header. */
   .navbar-watermelon {
-    --melon-scale: 0.7;
-    bottom: -14px;
+    --melon-scale: 0.62;
+    bottom: -16px;
   }
 }
 
