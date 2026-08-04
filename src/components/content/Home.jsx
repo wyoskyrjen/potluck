@@ -97,8 +97,11 @@ function Home() {
       <section className="home-band home-band-green">
         <Container fluid>
           <h2 className="home-heading">About the Host</h2>
+          {/* Stacked on phones, side by side from sm up. Holding the 5/7 split at phone
+              width squeezed the bio into six short lines, which stretched the equal-height
+              photo card past the square photo and left white space under it. */}
           <Row className="g-3">
-            <Col xs={5}>
+            <Col xs={12} sm={5}>
               <Card className="home-card h-100">
                 <Card.Img
                   variant="top"
@@ -108,7 +111,7 @@ function Home() {
                 />
               </Card>
             </Col>
-            <Col xs={7}>
+            <Col xs={12} sm={7}>
               <Card className="home-card h-100 text-center">
                 <Card.Body>
                   <p className="mb-2">
