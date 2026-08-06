@@ -1,6 +1,8 @@
 import { Container, Nav, Navbar } from 'react-bootstrap'
 import { Link, Outlet } from 'react-router'
 
+import PasswordGate from './PasswordGate'
+
 // Shared chrome for every page: a React Bootstrap navbar wired to React Router
 // links, and an <Outlet /> where the matched child route renders.
 function Layout() {
@@ -20,7 +22,13 @@ function Layout() {
       {/* No Container here on purpose: pages own their own width, so Home's
           colored bands can run edge to edge across the viewport. */}
       <main>
-        <Outlet />
+        {/* The gate wraps the Outlet rather than the whole Layout so the navbar and
+            footer still frame the password prompt — a guest can see whose potluck they
+            are being asked about. It sits here rather than inside Home because a hash
+            link straight to /#/menu would otherwise walk right past it. */}
+        <PasswordGate>
+          <Outlet />
+        </PasswordGate>
       </main>
 
       <footer className="bg-light border-top py-3">
