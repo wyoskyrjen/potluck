@@ -1,46 +1,118 @@
-import { useState } from 'react'
-import { Button, Col, Container, Form, Row } from 'react-bootstrap'
+import { useEffect, useState } from 'react'
+import { Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap'
 import { useNavigate, useParams } from 'react-router'
 
 import {
   COMMENT_MAX_LENGTH,
   findSignup,
   loadSignups,
-  saveSignups,
-  upsertSignup,
+  saveSignup,
 } from '../../signups'
 
-// Step two of signing up. One screen serves both cases from the design: if the
-// name from step one already exists this is "Update Participant" with the saved
-// details filled in, otherwise it is "New Participant" with a blank form.
+// Step two of signing up. One screen serves both cases from the design: if the name
+// from step one already exists this is "Update Participant" with the saved details
+// filled in, otherwise it is "New Participant" with a blank form.
 function SignUpParticipant() {
   const navigate = useNavigate()
   const { name: nameParam } = useParams()
 
-  // Read once on mount so typing never fights with what is in storage.
-  const [existing] = useState(() => findSignup(loadSignups(), nameParam ?? ''))
-  const [name, setName] = useState(existing?.name ?? nameParam ?? '')
-  const [phone, setPhone] = useState(existing?.phone ?? '')
-  const [comment, setComment] = useState(existing?.comment ?? '')
-  const [error, setError] = useState('')
+  // The row this name already has, or null for someone new. Set by the effect below.
+  const [existing, setExisting] = useState(null)
+  const [name, setName] = useState(nameParam ?? '')
+  const [phone, setPhone] = useState('')
+  const [comment, setComment] = useState('')
 
-  function handleSubmit(event) {
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+  const [nameError, setNameError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  // Look up the name from step one and, if it is already signed up, seed the form with
+  // what we have. This page runs its own effect instead of useLoad because the result
+  // becomes editable field state rather than something rendered directly.
+  useEffect(() => {
+    let active = true
+
+    loadSignups()
+      .then((signups) => {
+        if (!active) return
+        const match = findSignup(signups, nameParam ?? '')
+        if (!match) return
+        setExisting(match)
+        setName(match.name)
+        setPhone(match.phone ?? '')
+        setComment(match.comment ?? '')
+      })
+      .catch((err) => {
+        if (active) setLoadError(err)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [nameParam])
+
+  async function handleSubmit(event) {
     event.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName) {
-      setError('Name is required.')
+      setNameError('Name is required.')
       return
     }
-    // Re-read here rather than reusing the mount-time copy: another tab may have
-    // signed someone up while this form was open.
-    saveSignups(
-      upsertSignup(loadSignups(), {
+
+    setNameError('')
+    setSaveError('')
+    setSaving(true)
+    try {
+      await saveSignup({
+        id: existing?.id,
         name: trimmedName,
         phone: phone.trim(),
         comment: comment.trim(),
       })
+      navigate('/signup')
+    } catch (err) {
+      // Stay on the form with everything still typed in so the guest can fix it and
+      // try again. No setSaving(false) on the success path -- we navigate away.
+      setSaveError(err.message)
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Container className="signup-page text-center">
+        <Spinner animation="border" aria-hidden="true" />
+        <p className="mt-2 mb-0">Looking up {nameParam}…</p>
+      </Container>
     )
-    navigate('/signup')
+  }
+
+  // Without knowing whether this name is already signed up, saving could either
+  // duplicate the person or silently overwrite details we failed to read.
+  if (loadError) {
+    return (
+      <Container className="signup-page">
+        <Alert variant="danger">
+          Couldn&apos;t check the sign-up list, so this form isn&apos;t safe to submit
+          yet. {loadError.message}
+        </Alert>
+        <div className="signup-actions signup-form-actions mb-4">
+          <Button className="btn-cancel" onClick={() => navigate('/signup')}>
+            Back
+          </Button>
+          {/* A full reload rather than a re-render: the hash route is unchanged, so
+              this lands back on this same form and re-runs the lookup. */}
+          <Button className="btn-done" onClick={() => window.location.reload()}>
+            Try again
+          </Button>
+        </div>
+      </Container>
+    )
   }
 
   return (
@@ -58,9 +130,9 @@ function SignUpParticipant() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="enter name - required"
-              isInvalid={Boolean(error)}
+              isInvalid={Boolean(nameError)}
             />
-            <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">{nameError}</Form.Control.Feedback>
           </Col>
         </Form.Group>
 
@@ -95,12 +167,19 @@ function SignUpParticipant() {
           </Col>
         </Form.Group>
 
+        {saveError && <Alert variant="danger">{saveError}</Alert>}
+
         <div className="signup-actions signup-form-actions mb-4">
-          <Button type="button" className="btn-cancel" onClick={() => navigate('/signup')}>
+          <Button
+            type="button"
+            className="btn-cancel"
+            onClick={() => navigate('/signup')}
+            disabled={saving}
+          >
             Cancel
           </Button>
-          <Button type="submit" className="btn-done">
-            Done
+          <Button type="submit" className="btn-done" disabled={saving}>
+            {saving ? 'Saving…' : 'Done'}
           </Button>
         </div>
       </Form>

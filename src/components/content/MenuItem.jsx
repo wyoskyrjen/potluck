@@ -1,45 +1,65 @@
-import { useState } from 'react'
-import { Button, Col, Container, Form, Row } from 'react-bootstrap'
+import { useEffect, useState } from 'react'
+import { Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap'
 import { Link, useNavigate, useParams } from 'react-router'
 
 import {
   DIETS,
-  findItem,
   formatIngredients,
-  loadMenu,
+  loadItem,
   parseIngredients,
-  saveMenu,
-  upsertItem,
+  saveItem,
 } from '../../menu'
 import { loadSignups } from '../../signups'
 
-// Add or edit one dish. One screen serves both: /menu/item/new opens blank, while
-// the pencil on a menu card lands on /menu/item/:id with that dish filled in.
+// Add or edit one dish. One screen serves both: /menu/item/new opens blank, while the
+// pencil on a menu card lands on /menu/item/:id with that dish filled in.
 function MenuItem() {
   const navigate = useNavigate()
   const { id } = useParams()
 
-  // Read once on mount so typing never fights with what is in storage.
-  const [existing] = useState(() => (id ? findItem(loadMenu(), id) : null))
-  const [signups] = useState(loadSignups)
-  const [name, setName] = useState(existing?.name ?? '')
-  const [bringer, setBringer] = useState(existing?.bringer ?? '')
-  const [diets, setDiets] = useState(existing?.diets ?? [])
-  const [ingredients, setIngredients] = useState(
-    formatIngredients(existing?.ingredients)
-  )
-  const [error, setError] = useState('')
+  // The dish being edited, or null when adding. Set by the effect below.
+  const [existing, setExisting] = useState(null)
+  const [signups, setSignups] = useState([])
+  const [name, setName] = useState('')
+  const [bringer, setBringer] = useState('')
+  const [diets, setDiets] = useState([])
+  const [ingredients, setIngredients] = useState('')
 
-  // A pencil link only ever points at a real id, so getting here means a stale
-  // bookmark or a hand-edited URL.
-  if (id && !existing) {
-    return (
-      <Container className="signup-page">
-        <p>That item is no longer on the menu.</p>
-        <Link to="/menu">Back to the menu</Link>
-      </Container>
-    )
-  }
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+  const [nameError, setNameError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  // The dish (when editing) and the sign-up names for the Bringing list. Both are
+  // needed before the form can render, so they go out together rather than in series.
+  // This page runs its own effect instead of useLoad because the dish becomes editable
+  // field state rather than something rendered directly.
+  useEffect(() => {
+    let active = true
+
+    Promise.all([id ? loadItem(id) : null, loadSignups()])
+      .then(([item, people]) => {
+        if (!active) return
+        setSignups(people)
+        if (!item) return
+        setExisting(item)
+        setName(item.name)
+        setBringer(item.bringer ?? '')
+        setDiets(item.diets ?? [])
+        setIngredients(formatIngredients(item.ingredients))
+      })
+      .catch((err) => {
+        if (active) setLoadError(err)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [id])
 
   function toggleDiet(dietId) {
     setDiets((current) =>
@@ -49,25 +69,72 @@ function MenuItem() {
     )
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName) {
-      setError('Item name is required.')
+      setNameError('Item name is required.')
       return
     }
-    // Re-read here rather than reusing the mount-time copy: another tab may have
-    // changed the menu while this form was open.
-    saveMenu(
-      upsertItem(loadMenu(), {
+
+    setNameError('')
+    setSaveError('')
+    setSaving(true)
+    try {
+      await saveItem({
         id: existing?.id,
         name: trimmedName,
         bringer: bringer.trim(),
         diets,
         ingredients: parseIngredients(ingredients),
       })
+      navigate('/menu')
+    } catch (err) {
+      // Stay on the form with everything still typed in so it can be fixed and tried
+      // again. No setSaving(false) on the success path -- we navigate away.
+      setSaveError(err.message)
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Container className="signup-page text-center">
+        <Spinner animation="border" aria-hidden="true" />
+        <p className="mt-2 mb-0">{id ? 'Loading the dish…' : 'Getting set up…'}</p>
+      </Container>
     )
-    navigate('/menu')
+  }
+
+  if (loadError) {
+    return (
+      <Container className="signup-page">
+        <Alert variant="danger">
+          Couldn&apos;t load this form. {loadError.message}
+        </Alert>
+        <div className="signup-actions signup-form-actions mb-4">
+          <Button className="btn-cancel" onClick={() => navigate('/menu')}>
+            Back to the menu
+          </Button>
+          {/* A full reload rather than a re-render: the hash route is unchanged, so
+              this lands back on this same form and re-runs the load. */}
+          <Button className="btn-done" onClick={() => window.location.reload()}>
+            Try again
+          </Button>
+        </div>
+      </Container>
+    )
+  }
+
+  // A pencil link only ever points at a real id, so getting here means a stale
+  // bookmark, a hand-edited URL, or a dish someone removed from the dashboard.
+  if (id && !existing) {
+    return (
+      <Container className="signup-page">
+        <p>That item is no longer on the menu.</p>
+        <Link to="/menu">Back to the menu</Link>
+      </Container>
+    )
   }
 
   return (
@@ -83,10 +150,10 @@ function MenuItem() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="dish name - required"
-              isInvalid={Boolean(error)}
+              isInvalid={Boolean(nameError)}
               autoFocus
             />
-            <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">{nameError}</Form.Control.Feedback>
           </Col>
         </Form.Group>
 
@@ -147,12 +214,19 @@ function MenuItem() {
           </Col>
         </Form.Group>
 
+        {saveError && <Alert variant="danger">{saveError}</Alert>}
+
         <div className="signup-actions signup-form-actions mb-4">
-          <Button type="button" className="btn-cancel" onClick={() => navigate('/menu')}>
+          <Button
+            type="button"
+            className="btn-cancel"
+            onClick={() => navigate('/menu')}
+            disabled={saving}
+          >
             Cancel
           </Button>
-          <Button type="submit" className="btn-done">
-            Done
+          <Button type="submit" className="btn-done" disabled={saving}>
+            {saving ? 'Saving…' : 'Done'}
           </Button>
         </div>
       </Form>

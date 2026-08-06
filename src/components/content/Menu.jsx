@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Button, Card, Col, Container, Modal, Row } from 'react-bootstrap'
+import { Alert, Button, Card, Col, Container, Modal, Row, Spinner } from 'react-bootstrap'
 import { Link } from 'react-router'
 
 import { DIETS, dietsFor, loadMenu } from '../../menu'
+import { useLoad } from '../../useLoad'
 
 // The abbreviation badges on a card. Each carries its full label as a tooltip and
 // as screen-reader text, so the legend band is a convenience rather than the only
@@ -28,9 +29,10 @@ function DietBadges({ diets }) {
 }
 
 function Menu() {
-  // Read once when the page mounts. Returning here after Done remounts the route,
-  // so the grid always reflects the latest save.
-  const [items] = useState(loadMenu)
+  // Fetched fresh on mount. Returning here after Done remounts the route, so the grid
+  // always reflects the latest save -- including dishes added on someone else's phone.
+  const { data, loading, error } = useLoad(loadMenu)
+  const items = data ?? []
 
   // The item whose ingredients are showing, or null when the modal is closed.
   const [openItem, setOpenItem] = useState(null)
@@ -40,6 +42,11 @@ function Menu() {
       <Container>
         <h2 className="home-heading">Menu</h2>
 
+        {error && (
+          <Alert variant="danger">Couldn&apos;t load the menu. {error.message}</Alert>
+        )}
+
+        {/* Add Item stays available while the dishes load: it doesn't depend on them. */}
         <Row xs={2} className="g-3">
           <Col>
             <Button as={Link} to="/menu/item/new" className="btn-add-item">
@@ -76,7 +83,14 @@ function Menu() {
           ))}
         </Row>
 
-        {items.length === 0 && (
+        {loading && (
+          <p className="text-center mt-3 mb-0">
+            <Spinner animation="border" size="sm" aria-hidden="true" /> Loading the
+            menu…
+          </p>
+        )}
+
+        {!loading && !error && items.length === 0 && (
           <p className="text-center mt-3 mb-0">
             Nothing on the menu yet &mdash; add the first dish!
           </p>

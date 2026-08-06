@@ -1,12 +1,16 @@
-// Menu storage for the potluck. Like signups.js this is localStorage only — there
-// is no backend — and every menu screen reads and writes through here so the shape
-// of an item is defined in exactly one place.
+// Menu storage for the potluck. Dishes live in the `menu_items` table in Supabase,
+// and every menu screen reads and writes through here so the shape of an item is
+// defined in exactly one place.
 //
 // A menu item: { id, name, bringer, diets, ingredients }
 //   diets:       ids from DIETS below
 //   ingredients: one string per ingredient
+//
+// The functions that touch the network are async and reject on failure rather than
+// swallowing the error, so each page can show its own loading and error state. The
+// diet and ingredient helpers below are pure -- they only reshape data in memory.
 
-const STORAGE_KEY = 'potluck-menu'
+import { getSupabase } from './supabaseClient'
 
 // The five diet callouts from the design. Item cards, the add/edit form, and the
 // legend band all render from this list, so adding a sixth means editing one place.
@@ -19,47 +23,60 @@ export const DIETS = [
   { id: 'gluten-free', abbr: 'GF', label: 'Gluten free' },
 ]
 
-export function loadMenu() {
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    const parsed = stored ? JSON.parse(stored) : []
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    // Private browsing or a corrupted value — start empty instead of crashing.
-    return []
+// Postgres' SQLSTATE for a failed cast, which is what a non-uuid id in the URL hits.
+const INVALID_TEXT_REPRESENTATION = '22P02'
+
+// Named so the select lists stay identical between the grid and a single lookup.
+const FIELDS = 'id, name, bringer, diets, ingredients'
+
+// Oldest first, so adding a dish appends to the end of the grid.
+export async function loadMenu() {
+  const { data, error } = await getSupabase()
+    .from('menu_items')
+    .select(FIELDS)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return data ?? []
+}
+
+// One dish by id, or null if there is no such dish.
+export async function loadItem(id) {
+  const { data, error } = await getSupabase()
+    .from('menu_items')
+    .select(FIELDS)
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) {
+    // A hand-edited URL can put something that isn't a uuid in the path. Postgres
+    // rejects the cast, which for our purposes means the same thing as "no such item"
+    // and gets the same "no longer on the menu" screen.
+    if (error.code === INVALID_TEXT_REPRESENTATION) return null
+    throw error
   }
+  return data
 }
 
-export function saveMenu(items) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {
-    // Storage blocked or full; the change still applies for this visit.
-  }
+// Update the dish the caller looked up, or insert a new one when there is no id.
+export async function saveItem(item) {
+  const { id, ...fields } = item
+
+  const { error } = id
+    ? await getSupabase().from('menu_items').update(fields).eq('id', id)
+    : await getSupabase().from('menu_items').insert(fields)
+
+  if (error) throw error
 }
 
-export function findItem(items, id) {
-  return items.find((item) => item.id === id) ?? null
+// Badges always read in the order DIETS declares them, no matter what order they were
+// checked in. Ids no longer in DIETS simply drop out.
+export function dietsFor(ids) {
+  const selected = ids ?? []
+  return DIETS.filter((diet) => selected.includes(diet.id))
 }
 
-// Update the item with a matching id, or append a new one. An item without an id
-// has never been saved, which is how the form signals "new" rather than "edit".
-export function upsertItem(items, item) {
-  if (!item.id) {
-    return [...items, { ...item, id: crypto.randomUUID() }]
-  }
-  return items.map((existing) =>
-    existing.id === item.id ? { ...existing, ...item } : existing
-  )
-}
-
-// Badges always read in the order DIETS declares them, no matter what order they
-// were checked in. Ids no longer in DIETS simply drop out.
-export function dietsFor(ids = []) {
-  return DIETS.filter((diet) => ids.includes(diet.id))
-}
-
-// The form edits ingredients as one-per-line text; storage keeps them as an array.
+// The form edits ingredients as one-per-line text; the database keeps them as an array.
 export function parseIngredients(text) {
   return text
     .split('\n')
@@ -67,6 +84,6 @@ export function parseIngredients(text) {
     .filter(Boolean)
 }
 
-export function formatIngredients(ingredients = []) {
-  return ingredients.join('\n')
+export function formatIngredients(ingredients) {
+  return (ingredients ?? []).join('\n')
 }
