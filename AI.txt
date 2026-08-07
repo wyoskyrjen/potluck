@@ -1,7 +1,17 @@
 AI code generation estimation as of 7/28: 90%
+AI code generation estimation as of 8/7: 95%
 
+Round 1:
 I designed the website and fed that into AI to generate the code. Creating a high-fidelity prototype out of my original low-fidelity version
 was essential to have this process go well (tried updating design along the way early on, that was rough). 
 
 At this point I read through things to make sure I understand the overall design, but I'll need to go back through and fix some usability/
 design issues I caught while doing my run-through for the mid-project check-in.
+
+Round 2:
+I fixed a few of the bugs that I noticed in round 1, but otherwise again used AI to generate new code (to add the watermelon - took a few tries to get right,
+I was doing that debugging since AI couldn't see how it was displaying on a phone without me). 
+
+I also used AI to generate the code to link into the backend, but otherwise had to learn how to set up the backend using Supabase.
+
+So I'd say as a summary AI developed most of the code, but I had to be a coworker to it to handle the debugging and live validation. 
